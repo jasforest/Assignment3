@@ -13,35 +13,42 @@ public class Main {
 	public static void main(String[] args) throws IOException {
 		
 		Connectors myConnectors = new Connectors();
-		
+			
 		File maildir = new File(args[0]);
 		
-		String fileName = args[1];
-		
-		PrintWriter writer = new PrintWriter(new FileWriter(fileName));
-		
-		ReadDirectory.processDirectory(maildir);
-        
-    	ReadDirectory.linkConnection(ReadDirectory.connectionList);
-    	
-    	Map<String, Set<String>> adjList = new HashMap<>();
-    	
-        myConnectors.createConnectorList(adjList);
-    	
-    	List<String> connectors = new ArrayList<>();
-    	
-    	myConnectors.findConnectors(adjList, args[1]);
-    	
-    	DetailOfIndividual.printOutput(adjList);
-    	
-       // Print the connectors to stdout
-    	for (String connectorNames : connectors) {
+		if(maildir.exists()) {
+					
+			String fileName = args[1];
+			
+			PrintWriter writer = new PrintWriter(new FileWriter(fileName));
+			
+			ReadDirectory.processDirectory(maildir);
+	        
+	    	ReadDirectory.linkConnection(ReadDirectory.connectionList);
 	    	
-	    	writer.println(connectorNames);
+	    	Map<String, Set<String>> adjList = new HashMap<>();
+	    	
+	        myConnectors.createConnectorList(adjList);
+	    	
+	    	List<String> connectors = new ArrayList<>();
+	    	
+	    	myConnectors.findConnectors(adjList, args[1]);
+	    	
+	    	DetailOfIndividual.printOutput(adjList);
+	    	
+	       // Print the connectors to stdout
+	    	for (String connectorNames : connectors) {
+		    	
+		    	writer.println(connectorNames);
 
-		  }
-    	
-    	writer.close();
+			  }
+	    	
+	    	writer.close();
+			
+		}else {
+			
+			System.out.println("Directory doesn't exist");
+		}
 
     }
 
