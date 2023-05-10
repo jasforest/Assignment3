@@ -1,144 +1,85 @@
-import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.HashMap;
-import java.util.Set;
 import java.util.Map;
-import java.util.HashSet;
+import java.util.Scanner;
+import java.util.Set;
 
-public class ReadDirectory {
+public class DetailOfIndividual {
 	
-	public static List<List<String>> connectionList = new ArrayList<>();
+    private static final String INPUT_PROMPT = "Email address of the individual (or EXIT to quit): ";
 
-	private static List<String> receipientsList = new ArrayList<>();
-	
-	public static Map<String, Set<String>> connectionMap = new HashMap<>();
-
-	private static void getEmail(String filePath) {
-		
-		boolean reachedTo = false;
-		
-		// Start reading the file
-	    try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
-	    	
-	        String line;
-	        
-	        while ((line = reader.readLine()) != null) {
-	        	
-	        	if(line.startsWith("From: ")) {
-	        		
-	        		// Only extract the part excluding "From: "
-	        		line = line.substring(6);
-	        		
-	        		// Removing white space
-	        		String trimmedString = line.trim();
-	        		
-	        		storeEmailNames(trimmedString, receipientsList);
-	        		
-	        	}
-	        	
-	        	else if(line.startsWith("To: ")) {
-	        		
-	        		// When we are reading the part after first line of email list
-	        		reachedTo = true;
-	        		
-	        		line = line.substring(4);
-	        		
-	        		// Removing trailing part
-	        		String[] names = line.trim().split("\\s*,\\s*");
-	        		
-	        		for(String name : names) {
-	        			
-        				storeEmailNames(name, receipientsList);
-	        				
-	        		}
-	        		
-	        	}
-	        	
-	        	// Stop reading the part at the line that starts with subject
-	        	if(line.startsWith("Subject: ")) {
-	        		
-	        		reachedTo = false;
-	        		
-	        		break;
-	        		
-	        	}
-	        	
-	        	// In between "To:" and "Subject:"
-	        	if (reachedTo) {
-	        		
-	        		String[] names = line.trim().split("\\s*,\\s*");
-	        		
-	        		for(String name : names) {
-	        			
-	        			storeEmailNames(name, receipientsList);
-	        				
-	        		}
-				}
-	        }
-	        
-	        // Resetting the receipientslist avoid repetition
-    		connectionList.add(new ArrayList<>(receipientsList));
-    		
-    		receipientsList.clear();
-    		
-	    } catch (IOException e) {
-	    	
-	        e.printStackTrace();
-	    }
-	    
-	}
-
-	// Reading all the text files.
-    public static void processDirectory(File directory) {
+    public static void getInformation(String sender, Map<String, Set<String>> senderToRecepientSet) {
     	
-        if (directory.isDirectory()) {
+        if (!senderToRecepientSet.containsKey(sender)) {
         	
-            File[] files = directory.listFiles();
+            System.out.println("Email address (" + sender + ") not found in the data set");
             
-            if (files != null) {
+            return;
+        }
+
+        int sentCount = 0;
+        
+        int receivedCount = 0;
+
+        for (Set<String> recipients : senderToRecepientSet.values()) {
+        	
+        	// when the sender reveived email from colleages
+            if (recipients.contains(sender)) {
             	
-                for (File file : files) {
-                	
-                    if (file.isDirectory()) {
-                    	
-                        // Recursively call this function to process subdirectories
-                        processDirectory(file);
-                        
-                    } else if (file.isFile()) {
-                    	
-                        // Process the text file here
-                       getEmail(file.getAbsolutePath());
-                    }
-                }
+                receivedCount++;
+            }
+            sentCount += recipients.contains(sender) ? 1 : 0;
+        }
+
+        System.out.printf("number of mail %s sent: %d%n", sender, sentCount);
+        
+        System.out.printf("number of mail %s received: %d%n", sender, receivedCount);
+    }
+
+
+    public static void getNumPeopleEmailedWith(String name, Map<String, Set<String>> connectionMap) {
+    	
+    	int teamCount = 0;
+    	
+        if (!connectionMap.containsKey(name)) {
+        	
+            return;
+        }
+        
+        for (String member : connectionMap.get(name)) {
+        	
+        	// When it appears in other people's email list and they also sent email to them
+            if (connectionMap.containsKey(member) && connectionMap.get(member).contains(name)) {
+            	
+            	teamCount ++;
             }
         }
+        
+        System.out.println(name + " is in a team with " + teamCount+ " individuals");
     }
     
-    // Extracts the part before @
-    private static void storeEmailNames(String line, List<String> storeHere) {
+    public static void printOutput(Map<String, Set<String>> adjList) {
     	
-		storeHere.add(line);
-    		
-    }
-    public static void linkConnection(List<List<String>> connectionList) {
-    	
-    	Map<String, Set<String>> map = new HashMap<>();
-
-    	for (List<String> list : connectionList) {
-    		
-    		// Jump to next element
-    	    if (list.isEmpty()) {
-    	    	
-    	        continue;
-    	    }
-    	    // The first element is the sender
-    	    String key = list.get(0);
-    	    
-    	    map.computeIfAbsent(key, k -> new HashSet<>()).addAll(list.subList(1, list.size()));
-    	}
-
-    	connectionMap = map;
+        Scanner scanner = new Scanner(System.in);
+        
+        // Is used for storing user input
+        String emailAddress;
+        
+        do {
+        	
+            System.out.print(INPUT_PROMPT);
+            
+            emailAddress = scanner.nextLine();
+            
+            if (!emailAddress.equals("EXIT")) {
+            	
+                getInformation(emailAddress, adjList);
+                
+                getNumPeopleEmailedWith(emailAddress, adjList);
+            }
+            
+        } while (!emailAddress.equals("EXIT"));
+        // 
+        scanner.close();
     }
     
+
 }
